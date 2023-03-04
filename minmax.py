@@ -154,9 +154,10 @@ class MinMaxWorkspace:
         value_group = transpose(values)
 
         # prep the data table for displaying
-        data_table = [[*variables, 'min', 'max', 'final']]
+        data_table = [[*variables, 'value', 'min', 'max', 'final']]
 
         for value_row in value_group:
+            equ = self.equation
             min_equ = self.min_equation
             max_equ = self.max_equation
 
@@ -164,22 +165,25 @@ class MinMaxWorkspace:
             for i in range(num_vars):
                 var = variables[i]
                 val = value_row[i]
+                equ = equ.subs(var, val)
                 min_equ = min_equ.subs(var, val)
                 max_equ = max_equ.subs(var, val)
 
             # substitute constant values
             for symbol in self._present_constants:
+                equ = equ.subs(symbol['var'], symbol['val'])
                 min_equ = min_equ.subs(symbol['var'], symbol['val'])
                 max_equ = max_equ.subs(symbol['var'], symbol['val'])
 
             # process any known mathematical constants
+            val = N(equ)
             min_val = N(min_equ)
             max_val = N(max_equ)
             final_uncertainty = (max_val - min_val) / 2
 
             # add variable values to data table
             uncertainty_row = [round(min_val, dec_places), round(max_val, dec_places), round(final_uncertainty, dec_places)]
-            data_row = [*value_row, *uncertainty_row]
+            data_row = [*value_row, round(val, dec_places), *uncertainty_row]
             data_table += [data_row]
 
         print(FancyTable(data_table).table)
